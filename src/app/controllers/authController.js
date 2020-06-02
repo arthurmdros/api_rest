@@ -60,7 +60,7 @@ router.post('/forgot_password', async (req,res) => {
 
     try{
         const user = await User.findOne({ email });
-
+        
         if(!user)
             return res.status(400).send({error: 'Usuário não encontrado'});
 
@@ -69,7 +69,7 @@ router.post('/forgot_password', async (req,res) => {
         const now = new Date();
         now.setHours(now.getHours() + 1);
 
-        await User.findOneAndUpdate(user.id, {
+        await User.findByIdAndUpdate(user.id, {
             '$set': {
                 passwordResetToken: token,
                 passwordResetExpires: now,
@@ -92,8 +92,36 @@ router.post('/forgot_password', async (req,res) => {
                 return res.send();
         })
     }catch(err){
-        console.log(err);
         return res.status(400).send({ error: 'Ocorreu um erro no esqueceu a senha, tente novamente'});
+    }
+})
+
+router.post('/reset_password', async (req, res) => {
+    const { email, token, password } = req.body;
+
+    try{
+        const user = await User.findOne({ email })
+            .select('+passwordResetToken passwordResetExpires');
+        
+        if(!user)
+            return res.status(400).send({error: 'Usuário não encontrado'});
+
+        if( token !== user.passwordResetToken )
+            return res.status(400).send({error: 'Token inválido'});
+
+        const now = new Date();
+
+        if(now > user.passwordResetExpires)
+            return res.status(400).send({error: 'Token expirado, gere um novo'});
+
+        user.password = password;
+
+        await user.save();
+        
+        res.send();
+
+    }catch(err){
+        return res.status(400).send({error: 'Erro ao atualizar senha, tente novamente'});
     }
 })
 
