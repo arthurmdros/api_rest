@@ -18,4 +18,14 @@ router.get('/', async (req, res) => {
 });
 
 
+router.get('/:projectId', async (req, res) => {
+    try{
+        const project = await Project.findById(req.params.projectId).populate(['user', 'tasks']);
+
+        return res.send({ project });
+    }catch(err){
+        return res.status(400).send({error: "Erro ao carregar projetos do usuário, tente novamente"});
+    }
+});
+
 module.exports = app => app.use('/projects', router);
