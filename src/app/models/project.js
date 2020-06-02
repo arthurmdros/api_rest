@@ -14,10 +14,10 @@ const ProjectSchema = new mongoose.Schema({
         ref: 'User',
         required: true,   
     },
-    tasks: {
+    tasks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Task',        
-    },
+    }],
     createAt: {
         type: Date,
         default: Date.now,
