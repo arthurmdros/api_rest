@@ -50,4 +50,36 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.put('/:projectId', async (req, res) => {
+    try{       
+        const { title, description, tasks }  = req.body;
+
+        const project = await Project.findByIdAndUpdate(req.params.projectId, 
+            {
+                title, 
+                description
+            },
+            {   
+                new: true, 
+                useFindAndModify: false
+            });
+
+        project.tasks = [];
+        await Task.deleteMany({ project: project._id });        
+
+        await Promise.all(tasks.map(async task => {            
+            const projectTask = new Task({...task, project: project._id});            
+            await projectTask.save();
+            
+            project.tasks.push(projectTask);
+        }));
+
+        await project.save();
+
+        return res.send( {project} );
+    }catch(err){
+        return res.status(400).send({error: 'Erro ao atualizar projeto, tente novamente'});
+    }
+});
+
 module.exports = app => app.use('/projects', router);
